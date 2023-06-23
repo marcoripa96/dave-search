@@ -30,6 +30,6 @@ We have to decide which model to use. But you can start to experiment with vario
 
 1. FastAPI
 2. Endpoints:
-   1. /index-document
+   1. /index-document: single or bulk indexing
    2. /delete-document
-   3. /retrieve: retrieve top K most similar document given a natural language sentence
+   3. /search: retrieve top K most similar document given a natural language sentence
