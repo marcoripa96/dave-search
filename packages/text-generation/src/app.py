@@ -1,6 +1,9 @@
+import sys
+import os
+
+sys.path.append(os.path.join(os.path.dirname(__file__), "exllama"))
+
 import glob
-import time
-import socket
 import asyncio
 import uvicorn
 from typing import Union
@@ -13,6 +16,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI, HTTPException, Request
 from EXLlamaModel import EXLlamaModel
 from exllama.generator import ExLlamaGenerator
+
 
 # exllama imports:
 

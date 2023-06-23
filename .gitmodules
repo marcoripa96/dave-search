@@ -1,0 +1,3 @@
+[submodule "packages/text-generation/src/exllama"]
+	path = packages/text-generation/src/exllama
+	url = https://github.com/turboderp/exllama.git
