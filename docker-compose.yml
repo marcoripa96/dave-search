@@ -1,0 +1,19 @@
+version: '3'
+
+services:
+  text-generation:
+    build:
+      context: ./packages/text-generation
+      dockerfile: Dockerfile
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              capabilities: [ gpu ]
+    environment:
+      - MODEL_NAME=${MODEL_NAME}
+    ports:
+      - "7862:7862"
+    volumes:
+      - ./packages/text-generation/models:/workspace/models
