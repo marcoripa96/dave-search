@@ -1,4 +1,4 @@
-# Documents store and retrieval
+# Documents indexer
 
 #### DB
 
