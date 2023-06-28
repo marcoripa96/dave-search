@@ -15,7 +15,11 @@ class EXLlamaModel(LLM):
         self.config = ExLlamaConfig(model_config_path)  # create config from config.json
         self.config.model_path = model_path  # supply path to model weights file
         self.config.set_auto_map(gpu_split)
-        self.config.max_seq_len = 2048
+        if "8k" in model_directory.lower():
+            self.config.max_seq_len = 8192
+            self.config.compress_pos_emb = 4
+        else:
+            self.config.max_seq_len = 2048
         print("created config")
 
         self.instance = ExLlama(
