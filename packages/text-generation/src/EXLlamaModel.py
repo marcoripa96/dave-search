@@ -4,6 +4,8 @@ from exllama.generator import ExLlamaGenerator
 import os, glob
 from LLM import LLM
 
+model_base_prompt = "###Human: {message}?###Assistant:"
+
 
 class EXLlamaModel(LLM):
     def _load(self, model_directory: str, gpu_split: str = None):
@@ -41,6 +43,8 @@ class EXLlamaModel(LLM):
     async def generate_stream(self, inputs: str, max_new_tokens: int):
         new_text = ""
         last_text = ""
+
+        inputs = model_base_prompt.replace("{message}", inputs)
 
         self.generator.end_beam_search()
 

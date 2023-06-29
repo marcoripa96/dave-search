@@ -1,14 +1,14 @@
 import requests
 import json
 
-prompt = "###Human: {message}?###Assistant:"
+# prompt = "###Human: {message}?###Assistant:"
 
 message = input("Message: ")
 
-inputs = prompt.replace("{message}", message)
+# inputs = prompt.replace("{message}", message)
 
 data = {
-    "inputs": inputs,
+    "inputs": message,
     "max_new_tokens": 256
     # [DEFAULTS]:
     # temperature: 0.7,
