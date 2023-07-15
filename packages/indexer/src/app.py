@@ -264,10 +264,11 @@ def index_elastic_document(req: IndexElasticDocumentRequest, index_name):
 
 class QueryElasticIndexRequest(BaseModel):
     text: str
-    k_documents: int = 20
-    k_buckets: int = 20
-    metadata: list
-    annotations: list
+    metadata: list = None
+    annotations: list = None
+    n_facets: int = 20
+    page: int = 1
+    documents_per_page: int = 20
 
 
 @app.post("/elastic/index/{index_name}/query")
@@ -275,65 +276,74 @@ async def query_elastic_index(
     index_name: str,
     req: QueryElasticIndexRequest,
 ):
+    from_offset = (req.page - 1) * req.documents_per_page
+
+    # build a query that retrieve conditions based AND conditions between text, annotation facets and metadata facets
+    query = {
+        "bool": {
+            "must": [
+                {"match": {"text": req.text}},
+            ]
+        }
+    }
+
+    if req.annotations != None and len(req.annotations) > 0:
+        for annotation in req.annotations:
+            query["bool"]["must"].append(
+                {
+                    "nested": {
+                        "path": "annotations",
+                        "query": {
+                            "bool": {
+                                "filter": [
+                                    {
+                                        "term": {
+                                            "annotations.mention": annotation["value"]
+                                        }
+                                    },
+                                    {"term": {"annotations.type": annotation["type"]}},
+                                ]
+                            }
+                        },
+                    }
+                },
+            )
+
+    if req.metadata != None and len(req.metadata) > 0:
+        for metadata in req.metadata:
+            query["bool"]["must"].append(
+                {
+                    "nested": {
+                        "path": "metadata",
+                        "query": {
+                            "bool": {
+                                "filter": [
+                                    {"term": {"metadata.value": metadata["value"]}},
+                                    {"term": {"metadata.type": metadata["type"]}},
+                                ]
+                            }
+                        },
+                    }
+                },
+            )
+
     search_res = es_client.search(
         index=index_name,
-        size=req.k_documents,
-        query={
-            "bool": {
-                "must": [
-                    {"match": {"content": req.text}},
-                    {
-                        "nested": {
-                            "path": "annotations",
-                            "query": {
-                                "bool": {
-                                    "filter": [
-                                        {
-                                            "term": {
-                                                "annotations.mention": "facet value"
-                                            }
-                                        },
-                                        {
-                                            "term": {
-                                                "annotations.type": "annotation type"
-                                            }
-                                        },
-                                    ]
-                                }
-                            },
-                        }
-                    },
-                    {
-                        "nested": {
-                            "path": "metadata",
-                            "query": {
-                                "bool": {
-                                    "filter": [
-                                        {
-                                            "term": {
-                                                "metadata.value": "metadata facet value"
-                                            }
-                                        },
-                                        {"term": {"metadata.type": "metadata type"}},
-                                    ]
-                                }
-                            },
-                        }
-                    },
-                ]
-            }
-        },
+        size=req.documents_per_page,
+        from_=from_offset,
+        query=query,
         aggs={
             "metadata": {
                 "nested": {"path": "metadata"},
                 "aggs": {
                     "types": {
-                        "terms": {"field": "metadata.type", "size": req.k_buckets},
+                        "terms": {"field": "metadata.type", "size": req.n_facets},
                         "aggs": {
                             "values": {
                                 "terms": {
                                     "field": "metadata.value",
-                                    "size": req.k_buckets,
+                                    "size": req.n_facets,
+                                    "order": {"_key": "asc"},
                                 }
                             }
                         },
@@ -344,12 +354,13 @@ async def query_elastic_index(
                 "nested": {"path": "annotations"},
                 "aggs": {
                     "types": {
-                        "terms": {"field": "annotations.type", "size": req.k_buckets},
+                        "terms": {"field": "annotations.type", "size": req.n_facets},
                         "aggs": {
                             "mentions": {
                                 "terms": {
                                     "field": "annotations.mention",
-                                    "size": req.k_buckets,
+                                    "size": req.n_facets,
+                                    "order": {"_key": "asc"},
                                 }
                             }
                         },
@@ -362,10 +373,21 @@ async def query_elastic_index(
     hits = get_hits(search_res)
     annotations_facets = get_facets_annotations(search_res)
     metadata_facets = get_facets_metadata(search_res)
+    total_hits = search_res["hits"]["total"]["value"]
+    num_pages = total_hits // req.documents_per_page
+    if (
+        total_hits % req.documents_per_page > 0
+    ):  # if there is a remainder, add one more page
+        num_pages += 1
 
     return {
         "hits": hits,
         "facets": {"annotations": annotations_facets, "metadata": metadata_facets},
+        "pagination": {
+            "current_page": req.page,
+            "total_pages": num_pages,
+            "total_hits": total_hits,
+        },
     }
 
 
