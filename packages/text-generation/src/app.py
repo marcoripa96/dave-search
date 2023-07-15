@@ -97,6 +97,16 @@ def check():
     return {model}
 
 
+class CountTokensRequest(BaseModel):
+    inputs: str
+
+
+@app.post("/count-tokens")
+def count_tokens(req: CountTokensRequest):
+    ids = model.tokenize(req.inputs)
+    return ids.shape[-1]
+
+
 class GenerateRequest(BaseModel):
     inputs: str
     max_new_tokens: Optional[int] = 200

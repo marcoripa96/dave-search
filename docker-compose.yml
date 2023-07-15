@@ -1,10 +1,42 @@
-version: '3'
+version: '3.9'
 
 services:
-  text-generation:
+  # text-generation:
+  #   build:
+  #     context: ./packages/text-generation
+  #     dockerfile: Dockerfile
+  #   deploy:
+  #     resources:
+  #       reservations:
+  #         devices:
+  #           - driver: nvidia
+  #             capabilities: [ gpu ]
+  #   environment:
+  #     - MODEL_NAME=${MODEL_NAME}
+  #   ports:
+  #     - "7862:7862"
+  #   volumes:
+  #     - ./packages/text-generation/models:/workspace/models
+
+  es:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.7.0
+    environment:
+      - xpack.security.enabled=false
+      - "cluster.routing.allocation.disk.watermark.low=90%"
+      - discovery.type=single-node
+      - ES_JAVA_OPTS=-Xms4096m -Xmx4096m
+    ports:
+      - ${ELASTIC_PORT}:${ELASTIC_PORT}
+    volumes:
+      - esdata:/usr/share/elasticsearch/data
+
+
+  indexer:
     build:
-      context: ./packages/text-generation
+      context: ./packages/indexer
       dockerfile: Dockerfile
+    depends_on: 
+      - es
     deploy:
       resources:
         reservations:
@@ -12,8 +44,16 @@ services:
             - driver: nvidia
               capabilities: [ gpu ]
     environment:
-      - MODEL_NAME=${MODEL_NAME}
+      - HOST_BASE_URL=${HOST_BASE_URL}
+      - INDEXER_SERVER_PORT=${INDEXER_SERVER_PORT}
+      - DOCS_PORT=${DOCS_PORT}
+      - CHROMA_PORT=${CHROMA_PORT}
+      - ELASTIC_PORT=${ELASTIC_PORT}
+      - SENTENCE_TRANSFORMER_EMBEDDING_MODEL=${SENTENCE_TRANSFORMER_EMBEDDING_MODEL}
     ports:
-      - "7862:7862"
+      - ${INDEXER_SERVER_PORT}:${INDEXER_SERVER_PORT}
     volumes:
-      - ./packages/text-generation/models:/workspace/models
+      - ./packages/indexer/models:/root/.cache/huggingface
+
+volumes:
+  esdata:

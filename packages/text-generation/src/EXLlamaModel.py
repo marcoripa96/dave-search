@@ -40,6 +40,9 @@ class EXLlamaModel(LLM):
         )  # create generator
         print("created generator")
 
+    def tokenize(self, inputs: str):
+        return self.tokenizer.encode(inputs)
+
     async def generate_stream(self, inputs: str, max_new_tokens: int):
         new_text = ""
         last_text = ""

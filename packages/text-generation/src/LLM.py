@@ -11,5 +11,9 @@ class LLM(ABC):
         pass
 
     @abstractmethod
+    def tokenize(self, inputs: str):
+        pass
+
+    @abstractmethod
     def generate_stream(self, inputs: str, max_new_tokens: int):
         pass
