@@ -108,7 +108,7 @@ def count_tokens(req: CountTokensRequest):
 
 
 class GenerateRequest(BaseModel):
-    inputs: str
+    messages: List[dict]
     max_new_tokens: Optional[int] = 200
     temperature: Optional[float] = 0.7
     top_k: Optional[int] = 20
@@ -132,8 +132,6 @@ async def stream_data(req: GenerateRequest):
             await asyncio.sleep(1)
 
     try:
-        _MESSAGE = req.inputs
-
         # Set these from GenerateRequest:
         model.generator.settings = ExLlamaGenerator.Settings()
         model.generator.settings.temperature = req.temperature
@@ -153,13 +151,18 @@ async def stream_data(req: GenerateRequest):
         )
         model.generator.settings.token_repetition_penalty_decay = decay
 
+        _MESSAGE, max_new_tokens = model.prepare_message(
+            messages=req.messages,
+            max_new_tokens=req.max_new_tokens,
+        )
+
+        print(_MESSAGE)
+
         if req.stream:
             # copy of generate_simple() so that I could yield each token for streaming without having to change generator.py and make merging updates a nightmare:
-            return StreamingResponse(
-                model.generate_stream(_MESSAGE, req.max_new_tokens)
-            )
+            return StreamingResponse(model.generate_stream(_MESSAGE, max_new_tokens))
         else:
-            return model.generate(_MESSAGE, req.max_new_tokens)
+            return model.generate(_MESSAGE, max_new_tokens)
     except Exception as e:
         return {"response": f"Exception while processing request: {e}"}
 

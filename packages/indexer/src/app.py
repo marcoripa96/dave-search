@@ -210,7 +210,7 @@ def create_elastic_index(req: CreateElasticIndexRequest):
                 "annotations": {
                     "type": "nested",
                     "properties": {
-                        "mention": {"type": "keyword"},
+                        "id_ER": {"type": "keyword"},
                         "type": {"type": "keyword"},
                     },
                 },
@@ -298,7 +298,7 @@ async def query_elastic_index(
                                 "filter": [
                                     {
                                         "term": {
-                                            "annotations.mention": annotation["value"]
+                                            "annotations.id_ER": annotation["value"]
                                         }
                                     },
                                     {"term": {"annotations.type": annotation["type"]}},
@@ -358,10 +358,20 @@ async def query_elastic_index(
                         "aggs": {
                             "mentions": {
                                 "terms": {
-                                    "field": "annotations.mention",
+                                    "field": "annotations.id_ER",
                                     "size": req.n_facets,
                                     "order": {"_key": "asc"},
-                                }
+                                },
+                                "aggs": {
+                                    "top_hits_per_mention": {
+                                        "top_hits": {
+                                            "_source": [
+                                                "annotations.display_name",
+                                            ],
+                                            "size": 1,
+                                        }
+                                    }
+                                },
                             }
                         },
                     }

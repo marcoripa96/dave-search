@@ -13,7 +13,16 @@ def get_facets_annotations(search_res):
             "key": bucket["key"],
             "n_children": len(bucket["mentions"]["buckets"]),
             "doc_count": bucket["doc_count"],
-            "children": bucket["mentions"]["buckets"],
+            "children": [
+                {
+                    "key": children_bucket["key"],
+                    "display_name": children_bucket["top_hits_per_mention"]["hits"][
+                        "hits"
+                    ][0]["_source"]["display_name"],
+                    "doc_count": children_bucket["doc_count"],
+                }
+                for children_bucket in bucket["mentions"]["buckets"]
+            ],
         }
 
     return [
@@ -38,3 +47,9 @@ def get_facets_metadata(search_res):
         convert_annotation_bucket(bucket)
         for bucket in search_res["aggregations"]["metadata"]["types"]["buckets"]
     ]
+
+
+def anonymize(s):
+    words = s.split()
+    new_words = ["".join([word[0]] + ["*" * (len(word) - 1)]) for word in words]
+    return " ".join(new_words)

@@ -6,6 +6,7 @@ from actions import (
     index_elastic_document,
     create_elastic_index,
 )
+from utils import anonymize
 
 
 class ChromaIndexer:
@@ -41,17 +42,26 @@ class ChromaIndexer:
 
 
 class ElasticsearchIndexer:
+    def __init__(self, anonymize_type=[]):
+        self.anonymize_type = anonymize_type
+
     def create_index(self, name: str):
         return create_elastic_index(name)
 
     def index(self, index: str, doc: dict):
         annotations = [
             {
-                "id": ann["id"],
+                "id": ann["_id"],
+                # this will be a real ER id when it exists
+                "id_ER": ann["_id"],
                 "start": ann["start"],
                 "end": ann["end"],
                 "type": ann["type"],
                 "mention": ann["features"]["mention"],
+                # this is temporary, there will be a display name directly in the annotaion object
+                "display_name": anonymize(ann["features"]["mention"])
+                if ann["type"] in self.anonymize_type
+                else ann["features"]["mention"],
             }
             for ann in doc["annotation_sets"]["entities_merged"]["annotations"]
         ]

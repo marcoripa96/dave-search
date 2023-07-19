@@ -41,8 +41,8 @@ print(
             "test",
             {
                 "text": "sentenza",
-                "annotations": [{"type": "persona", "value": "CTU"}],
-                "page": 2,
+                # "annotations": [{"type": "persona", "value": "CTU"}],
+                "page": 1,
                 "n_facets": 10000,
             },
         ),

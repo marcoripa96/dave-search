@@ -4,7 +4,7 @@ import os
 
 class AppSettings(BaseSettings):
     # titan host base url
-    host_base_url: str = os.getenv("HOST_BASE_URL", "localhost")
+    host_base_url: str = os.getenv("HOST_BASE_URL", "10.0.2.29")
     # port where the indexer runs
     indexer_server_port: str = os.getenv("INDEXER_SERVER_PORT", "7863")
     # port where the documents service runs

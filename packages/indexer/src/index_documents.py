@@ -15,7 +15,7 @@ chroma_indexer = ChromaIndexer(
     chunk_size=settings.chunk_size,
     chunk_overlap=settings.chunk_overlap,
 )
-elastic_indexer = ElasticsearchIndexer()
+elastic_indexer = ElasticsearchIndexer(anonymize_type=["persona"])
 
 # create indexes if they do not exist
 chroma_indexer.create_index(INDEX_COLLECTION_NAME)
@@ -25,9 +25,7 @@ print("Start indexing")
 domains = ["famiglia", "strada", "bancario"]
 # index 100 documents for each domain
 for domain in domains:
-    documents = requests.get(
-        DOCS_BASE_URL + "/api/mongo/document?limit=100&q=" + domain
-    )
+    documents = requests.get(DOCS_BASE_URL + "/api/mongo/document?limit=5&q=" + domain)
     documents = documents.json()["docs"]
 
     print("Indexing documents for domain: " + domain)

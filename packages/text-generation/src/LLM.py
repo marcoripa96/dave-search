@@ -11,6 +11,10 @@ class LLM(ABC):
         pass
 
     @abstractmethod
+    def prepare_message(self, inputs: str):
+        pass
+
+    @abstractmethod
     def tokenize(self, inputs: str):
         pass
 
