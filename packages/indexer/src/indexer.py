@@ -7,21 +7,27 @@ from actions import (
     create_elastic_index,
 )
 from utils import anonymize
+import torch
 
 
 class ChromaIndexer:
     def __init__(self, embedding_model: str, chunk_size: int, chunk_overlap: int):
         self.embedding_model = SentenceTransformer(embedding_model)
+        self.embedding_model.to("cuda")
+        self.embedding_model.eval()
+
         self.chunker = DocumentChunker(
             chunk_size=chunk_size, chunk_overlap=chunk_overlap
         )
 
     def __embed(self, text: str):
         chunks = self.chunker.chunk(text)
+        embeddings = []
+        with torch.no_grad():
+            embeddings = self.embedding_model.encode(chunks)
 
-        embeddings = self.embedding_model.encode(chunks)
-
-        return chunks, embeddings.tolist()
+        embeddings = embeddings.tolist()
+        return chunks, embeddings
 
     def create_index(self, name: str):
         return create_chroma_collection(name)
@@ -31,7 +37,7 @@ class ChromaIndexer:
 
         metadatas = [metadata for _ in chunks]
 
-        return index_chroma_document(
+        res = index_chroma_document(
             collection,
             {
                 "documents": chunks,
@@ -39,6 +45,10 @@ class ChromaIndexer:
                 "metadatas": metadatas,
             },
         )
+        del embeddings
+        del chunks
+
+        return res
 
 
 class ElasticsearchIndexer:
@@ -58,6 +68,8 @@ class ElasticsearchIndexer:
                 "end": ann["end"],
                 "type": ann["type"],
                 "mention": ann["features"]["mention"],
+                "is_linked": ann["features"]["url"] != None
+                and (not ann["features"]["linking"]["is_nil"]),
                 # this is temporary, there will be a display name directly in the annotaion object
                 "display_name": anonymize(ann["features"]["mention"])
                 if ann["type"] in self.anonymize_type

@@ -15,7 +15,10 @@ class AppSettings(BaseSettings):
     elastic_port: str = os.getenv("ELASTIC_PORT", "9200")
     # the mebedding models used, if you change the model you also have the re-index documents
     embedding_model: str = os.getenv(
-        "SENTENCE_TRANSFORMER_EMBEDDING_MODEL", "efederici/sentence-IT5-base"
+        "SENTENCE_TRANSFORMER_EMBEDDING_MODEL",
+        "efederici/sentence-BERTino-v2-pt",
+        # "efederici/sentence-IT5-base"
+        # "nickprock/mmarco-bert-base-italian-uncased",
     )
     chunk_size: int = 200
     chunk_overlap: int = 20

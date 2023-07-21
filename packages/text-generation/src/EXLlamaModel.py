@@ -4,9 +4,7 @@ from exllama.tokenizer import ExLlamaTokenizer
 from exllama.generator import ExLlamaGenerator
 import os, glob
 from LLM import LLM
-
-
-SYSTEM_BASE_PROMPT = f"""SYSTEM: You are a helpful, respectful and honest assistant. Always answer as helpfully as possible, while being safe. Please ensure that your responses are socially unbiased and positive in nature. If a question does not make any sense, or is not factually coherent, explain why instead of answering something not correct. If you don't know the answer to a question, please don't share false information."""
+from prompts import llama_v2_prompt
 
 
 class EXLlamaModel(LLM):
@@ -51,45 +49,14 @@ class EXLlamaModel(LLM):
         max_new_tokens: int,
         min_token_reply: int = 256,
     ):
-        _SYSTEM = (
-            "SYSTEM: " + messages[0]["content"]
-            if messages[0]["role"] == "assistant"
-            else SYSTEM_BASE_PROMPT
+        return (
+            llama_v2_prompt(messages, max_new_tokens, min_token_reply),
+            max_new_tokens,
         )
-
-        start_index = 1 if messages[0]["role"] == "assistant" else 0
-
-        _CONVERSATION = "\n".join(
-            [
-                message["role"] + ": " + message["content"].strip()
-                for message in messages[start_index:]
-            ]
-        )
-
-        _MESSAGE = _SYSTEM + "\n" + "USER: " + _CONVERSATION
-
-        encoded_message = self.tokenize(_MESSAGE)
-        message_length = encoded_message.shape[-1]
-
-        if message_length >= 4096 - min_token_reply:
-            encoded_user_message = self.tokenize(_CONVERSATION)
-            # remove some tokens from the end of the message
-            encoded_user_message = encoded_user_message[:-min_token_reply]
-            max_new_tokens = (
-                max_new_tokens if max_new_tokens <= min_token_reply else min_token_reply
-            )
-            decoded_user_message = self.tokenizer.decode(encoded_user_message)
-            _MESSAGE = _SYSTEM + "\n" + "USER: " + decoded_user_message
-
-        _MESSAGE = _MESSAGE + "\n" + "ASSISTANT:"
-
-        return _MESSAGE, max_new_tokens
 
     async def generate_stream(self, inputs: str, max_new_tokens: int):
         new_text = ""
         last_text = ""
-
-        # inputs = model_base_prompt.replace("{message}", inputs)
 
         self.generator.end_beam_search()
 

@@ -25,7 +25,9 @@ print("Start indexing")
 domains = ["famiglia", "strada", "bancario"]
 # index 100 documents for each domain
 for domain in domains:
-    documents = requests.get(DOCS_BASE_URL + "/api/mongo/document?limit=5&q=" + domain)
+    documents = requests.get(
+        DOCS_BASE_URL + "/api/mongo/document?limit=400&q=" + domain
+    )
     documents = documents.json()["docs"]
 
     print("Indexing documents for domain: " + domain)
@@ -34,7 +36,7 @@ for domain in domains:
         # retrieve a full document
         current_doc = retriever.retrieve(doc_id)
         # # index chunks for the document
-        r_chroma = chroma_indexer.index(
+        chroma_indexer.index(
             collection="test",
             doc=current_doc,
             metadata={
@@ -44,4 +46,4 @@ for domain in domains:
             },
         )
         # index elastic
-        r_elastic = elastic_indexer.index(index="test", doc=current_doc)
+        elastic_indexer.index(index="test", doc=current_doc)

@@ -156,8 +156,6 @@ async def stream_data(req: GenerateRequest):
             max_new_tokens=req.max_new_tokens,
         )
 
-        print(_MESSAGE)
-
         if req.stream:
             # copy of generate_simple() so that I could yield each token for streaming without having to change generator.py and make merging updates a nightmare:
             return StreamingResponse(model.generate_stream(_MESSAGE, max_new_tokens))

@@ -13,16 +13,22 @@ def get_facets_annotations(search_res):
             "key": bucket["key"],
             "n_children": len(bucket["mentions"]["buckets"]),
             "doc_count": bucket["doc_count"],
-            "children": [
-                {
-                    "key": children_bucket["key"],
-                    "display_name": children_bucket["top_hits_per_mention"]["hits"][
-                        "hits"
-                    ][0]["_source"]["display_name"],
-                    "doc_count": children_bucket["doc_count"],
-                }
-                for children_bucket in bucket["mentions"]["buckets"]
-            ],
+            "children": sorted(
+                [
+                    {
+                        "key": children_bucket["key"],
+                        "display_name": children_bucket["top_hits_per_mention"]["hits"][
+                            "hits"
+                        ][0]["_source"]["display_name"],
+                        "is_linked": children_bucket["top_hits_per_mention"]["hits"][
+                            "hits"
+                        ][0]["_source"]["is_linked"],
+                        "doc_count": children_bucket["doc_count"],
+                    }
+                    for children_bucket in bucket["mentions"]["buckets"]
+                ],
+                key=lambda x: x["display_name"],
+            ),
         }
 
     return [

@@ -13,6 +13,7 @@ from functools import lru_cache
 from settings import AppSettings
 from retriever import DocumentRetriever
 from utils import get_facets_annotations, get_facets_metadata, get_hits
+import torch
 
 
 @lru_cache()
@@ -133,9 +134,11 @@ async def query_collection(collection_name: str, req: QueryCollectionRquest):
     # try:
     # get most similar chunks
     collection = chroma_client.get_collection(collection_name)
+    embeddings = []
 
-    # create embeddings for the query
-    embeddings = model.encode(req.query)
+    with torch.no_grad():
+        # create embeddings for the query
+        embeddings = model.encode(req.query)
 
     result = collection.query(
         query_embeddings=embeddings.tolist(),
@@ -360,13 +363,13 @@ async def query_elastic_index(
                                 "terms": {
                                     "field": "annotations.id_ER",
                                     "size": req.n_facets,
-                                    "order": {"_key": "asc"},
                                 },
                                 "aggs": {
                                     "top_hits_per_mention": {
                                         "top_hits": {
                                             "_source": [
                                                 "annotations.display_name",
+                                                "annotations.is_linked",
                                             ],
                                             "size": 1,
                                         }
@@ -404,7 +407,13 @@ async def query_elastic_index(
 if __name__ == "__main__":
     settings = get_settings()
 
-    model = SentenceTransformer(settings.embedding_model, cache_folder="../models/")
+    model = SentenceTransformer(
+        settings.embedding_model, cache_folder="../models/", device="cuda"
+    )
+
+    model = model.to("cuda")
+    model = model.eval()
+
     chroma_client = chromadb.Client(
         Settings(
             chroma_api_impl="rest",
