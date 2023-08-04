@@ -1,25 +1,26 @@
 version: '3.9'
 
 services:
-  # text-generation:
-  #   build:
-  #     context: ./packages/text-generation
-  #     dockerfile: Dockerfile
-  #   deploy:
-  #     resources:
-  #       reservations:
-  #         devices:
-  #           - driver: nvidia
-  #             capabilities: [ gpu ]
-  #   environment:
-  #     - MODEL_NAME=${MODEL_NAME}
-  #   ports:
-  #     - "7862:7862"
-  #   volumes:
-  #     - ./packages/text-generation/models:/workspace/models
+  text-generation:
+    build:
+      context: ./packages/text-generation
+      dockerfile: Dockerfile
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              capabilities: [ gpu ]
+    environment:
+      - MODEL_NAME=${MODEL_NAME}
+    ports:
+      - "7862:7862"
+    volumes:
+      - ./packages/text-generation/models:/workspace/models
 
   es:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.7.0
+    restart: always
     environment:
       - xpack.security.enabled=false
       - "cluster.routing.allocation.disk.watermark.low=90%"
@@ -37,6 +38,7 @@ services:
       dockerfile: Dockerfile
     depends_on: 
       - es
+    restart: always
     deploy:
       resources:
         reservations:

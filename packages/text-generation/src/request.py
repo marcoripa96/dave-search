@@ -9,11 +9,11 @@ message = input("Message: ")
 
 data = {
     "messages": [
-        {"role": "user", "content": "Can you provide me an example of NER?"},
-        {
-            "role": "assistant",
-            "content": """Of course! Natural Language Processing (NLP) is a subfield of artificial intelligence (AI) that focuses on interacting with humans using natural language. One common application of NLP is named entity recognition (NER), which involves identifying and categorizing entities mentioned in text into predefined categories such as person, organization, location, etc. For instance, if I were to say "John Smith works at Apple", John Smith would be an entity and Apple would be another entity. Does this help clarify things for you?""",
-        },
+        {"role": "user", "content": message},
+        # {
+        #     "role": "assistant",
+        #     "content": """Of course! Natural Language Processing (NLP) is a subfield of artificial intelligence (AI) that focuses on interacting with humans using natural language. One common application of NLP is named entity recognition (NER), which involves identifying and categorizing entities mentioned in text into predefined categories such as person, organization, location, etc. For instance, if I were to say "John Smith works at Apple", John Smith would be an entity and Apple would be another entity. Does this help clarify things for you?""",
+        # },
     ],
     # "max_new_tokens": 256
     # [DEFAULTS]:

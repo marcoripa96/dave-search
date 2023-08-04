@@ -16,8 +16,8 @@ class AppSettings(BaseSettings):
     # the mebedding models used, if you change the model you also have the re-index documents
     embedding_model: str = os.getenv(
         "SENTENCE_TRANSFORMER_EMBEDDING_MODEL",
-        "efederici/sentence-BERTino-v2-pt",
-        # "efederici/sentence-IT5-base"
+        # "efederici/sentence-BERTino-v2-pt",
+        "efederici/sentence-IT5-base"
         # "nickprock/mmarco-bert-base-italian-uncased",
     )
     chunk_size: int = 200

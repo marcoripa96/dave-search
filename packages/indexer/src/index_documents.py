@@ -25,9 +25,7 @@ print("Start indexing")
 domains = ["famiglia", "strada", "bancario"]
 # index 100 documents for each domain
 for domain in domains:
-    documents = requests.get(
-        DOCS_BASE_URL + "/api/mongo/document?limit=400&q=" + domain
-    )
+    documents = requests.get(DOCS_BASE_URL + "/api/mongo/document?limit=20&q=" + domain)
     documents = documents.json()["docs"]
 
     print("Indexing documents for domain: " + domain)

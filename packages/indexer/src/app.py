@@ -139,13 +139,16 @@ async def query_collection(collection_name: str, req: QueryCollectionRquest):
     with torch.no_grad():
         # create embeddings for the query
         embeddings = model.encode(req.query)
+    embeddings = embeddings.tolist()
 
     result = collection.query(
-        query_embeddings=embeddings.tolist(),
+        query_embeddings=embeddings,
         n_results=req.k,
         where=req.where,
         include=req.include,
     )
+
+    del embeddings
 
     doc_chunk_ids_map = {}
 
@@ -407,9 +410,7 @@ async def query_elastic_index(
 if __name__ == "__main__":
     settings = get_settings()
 
-    model = SentenceTransformer(
-        settings.embedding_model, cache_folder="../models/", device="cuda"
-    )
+    model = SentenceTransformer(settings.embedding_model, device="cuda")
 
     model = model.to("cuda")
     model = model.eval()
